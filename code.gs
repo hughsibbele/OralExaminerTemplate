@@ -1289,7 +1289,8 @@ function callGemini(prompt) {
 
 /**
  * Parses Gemini's grading response in the structured output format
- * Expected format has "Multiplier: X.XX" line and optional INTEGRITY FLAGS section
+ * Expected format has Pass/Flag elements, two scored elements (Text Knowledge, Content Understanding),
+ * a "Multiplier: X.XX" line, and optional INTEGRITY FLAGS section
  * @param {string} response - The raw response from Gemini
  * @returns {Object} Object with grade (number), comments (string), and flagged (boolean)
  */
@@ -1298,21 +1299,13 @@ function parseGradingResponse(response) {
   const multiplierMatch = response.match(/Multiplier:\s*([0-9]+\.?[0-9]*)/i);
   let grade = multiplierMatch ? parseFloat(multiplierMatch[1]) : null;
 
-  // Fallback: if no multiplier line, try to compute from individual scores
+  // Fallback: if no multiplier line, try to compute from the two scored elements
   if (!grade) {
-    const scoreLines = [
-      /Paper Knowledge:\s*([1-3])/i,
-      /Text Knowledge:\s*([1-5])/i,
-      /Content Understanding:\s*([1-5])/i,
-      /Writing Process:\s*([1-3])/i
-    ];
-    const scores = scoreLines.map(p => {
-      const m = response.match(p);
-      return m ? parseInt(m[1]) : null;
-    }).filter(s => s !== null);
+    const tkMatch = response.match(/Text Knowledge:\s*([1-5])/i);
+    const cuMatch = response.match(/Content Understanding:\s*([1-5])/i);
 
-    if (scores.length === 4) {
-      const avg = scores.reduce((a, b) => a + b, 0) / 4;
+    if (tkMatch && cuMatch) {
+      const avg = (parseInt(tkMatch[1]) + parseInt(cuMatch[1])) / 2;
       grade = 1.00 + (avg - 3) * 0.05;
     }
   }
@@ -1323,13 +1316,18 @@ function parseGradingResponse(response) {
     sheetLog("parseGradingResponse", "Could not parse grade, defaulting to 1.0", { response: response.substring(0, 500) });
   }
 
-  // Clamp to valid range (natural range with current rubric is 0.90–1.05)
+  // Clamp to valid range [0.90, 1.05]
   grade = Math.max(0.90, Math.min(1.05, grade));
 
-  // Check for integrity flags
+  // Check for integrity flags in the INTEGRITY FLAGS section
   const flagSection = response.match(/INTEGRITY FLAGS:\s*([\s\S]*?)$/i);
   const flagText = flagSection ? flagSection[1].trim() : "";
-  const flagged = flagText.length > 0 && !/^none\.?$/i.test(flagText);
+  const hasIntegrityFlags = flagText.length > 0 && !/^none\.?$/i.test(flagText);
+
+  // Check for Pass/Flag elements — a "Flag" on either element also triggers flagged
+  const pkFlag = /Paper Knowledge:\s*Flag/i.test(response);
+  const wpFlag = /Writing Process:\s*Flag/i.test(response);
+  const flagged = hasIntegrityFlags || pkFlag || wpFlag;
 
   return {
     grade: Math.round(grade * 100) / 100,  // Round to 2 decimal places
@@ -1900,12 +1898,63 @@ function gradeAllPending() {
 }
 
 /**
+ * Regrades all submissions that have already been graded or reviewed.
+ * Shows a confirmation dialog before proceeding since this overwrites existing grades.
+ */
+function regradeAll() {
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
+  const data = sheet.getDataRange().getValues();
+
+  // Count eligible submissions
+  const eligible = [];
+  for (let i = 1; i < data.length; i++) {
+    const status = data[i][COL.STATUS - 1];
+    if (status === STATUS.GRADED || status === STATUS.REVIEWED) {
+      eligible.push(data[i][COL.SESSION_ID - 1].toString());
+    }
+  }
+
+  if (eligible.length === 0) {
+    ui.alert("No graded or reviewed submissions found to regrade.");
+    return;
+  }
+
+  const confirm = ui.alert(
+    "Regrade All",
+    `This will regrade ${eligible.length} submission(s) with status Graded or Reviewed. ` +
+    "Existing grades and comments will be overwritten. Continue?",
+    ui.ButtonSet.YES_NO
+  );
+
+  if (confirm !== ui.Button.YES) {
+    return;
+  }
+
+  let success = 0;
+  let errors = 0;
+  for (const sessionId of eligible) {
+    const result = gradeDefense(sessionId);
+    if (result && result.success) {
+      success++;
+    } else {
+      errors++;
+    }
+  }
+
+  ui.alert(`Regrade complete: ${success} succeeded, ${errors} failed.`);
+  sheetLog("regradeAll", "Regrade complete", { success: success, errors: errors, total: eligible.length });
+}
+
+/**
  * Creates a custom menu in the spreadsheet and applies formatting
  */
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('Oral Defense')
     .addItem('Grade All Pending', 'gradeAllPending')
+    .addItem('Regrade All', 'regradeAll')
     .addItem('Recover Stuck Defenses', 'recoverStuckDefenses')
     .addItem('Refresh Status Counts', 'showStatusCounts')
     .addSeparator()

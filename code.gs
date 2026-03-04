@@ -1825,8 +1825,8 @@ function autoRecoverTranscripts() {
  * - Sets compact column widths appropriate for each data type
  * - Sets compact row heights to show more entries
  */
-function formatDatabaseSheet() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+function formatDatabaseSheet(ss) {
+  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
   const sheet = ss.getSheetByName(SUBMISSIONS_SHEET);
 
   if (!sheet) {
@@ -1913,8 +1913,8 @@ function onOpen() {
     .addItem('Migrate Secrets to Script Properties', 'migrateSecretsToProperties')
     .addToUi();
 
-  // Auto-format the database sheet on open
-  formatDatabaseSheet();
+  // Auto-format the database sheet on open (pass active spreadsheet to avoid openById permission issue)
+  formatDatabaseSheet(SpreadsheetApp.getActiveSpreadsheet());
 }
 
 /**

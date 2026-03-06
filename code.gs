@@ -86,7 +86,7 @@ const COL = {
   DEFENSE_STARTED: 6,
   CALL_LENGTH: 7,
   TRANSCRIPT: 8,
-  AI_MULTIPLIER: 9,   // Renamed from CLAUDE_GRADE
+  AI_ADJUSTMENT: 9,   // Percentage point adjustment from defense
   AI_COMMENT: 10,     // Renamed from CLAUDE_COMMENTS
   INSTRUCTOR_NOTES: 11,
   FINAL_GRADE: 12,
@@ -879,8 +879,8 @@ function updateStudentStatus(sessionId, newStatus, additionalFields = {}) {
       if (additionalFields.transcript) {
         sheet.getRange(row, COL.TRANSCRIPT).setValue(additionalFields.transcript);
       }
-      if (additionalFields.grade) {
-        sheet.getRange(row, COL.AI_MULTIPLIER).setValue(additionalFields.grade);
+      if (additionalFields.grade !== undefined && additionalFields.grade !== null) {
+        sheet.getRange(row, COL.AI_ADJUSTMENT).setValue(additionalFields.grade);
       }
       if (additionalFields.comments) {
         sheet.getRange(row, COL.AI_COMMENT).setValue(additionalFields.comments);
@@ -1289,48 +1289,56 @@ function callGemini(prompt) {
 
 /**
  * Parses Gemini's grading response in the structured output format
- * Expected format has Pass/Flag elements, two scored elements (Text Knowledge, Content Understanding),
- * a "Multiplier: X.XX" line, and optional INTEGRITY FLAGS section
+ * Expected format has four scored elements (Paper Knowledge 1-3, Writing Process 1-3,
+ * Text Knowledge 1-5, Content Understanding 1-5), an "Adjustment: +/-X.X" line,
+ * and optional INTEGRITY FLAGS section
  * @param {string} response - The raw response from Gemini
- * @returns {Object} Object with grade (number), comments (string), and flagged (boolean)
+ * @returns {Object} Object with grade (number - percentage point adjustment), comments (string), and flagged (boolean)
  */
 function parseGradingResponse(response) {
-  // Extract multiplier from "Multiplier: X.XX" line
-  const multiplierMatch = response.match(/Multiplier:\s*([0-9]+\.?[0-9]*)/i);
-  let grade = multiplierMatch ? parseFloat(multiplierMatch[1]) : null;
+  // Extract all four scored elements
+  const pkMatch = response.match(/Paper Knowledge:\s*([1-3])/i);
+  const wpMatch = response.match(/Writing Process:\s*([1-3])/i);
+  const tkMatch = response.match(/Text Knowledge:\s*([1-5])/i);
+  const cuMatch = response.match(/Content Understanding:\s*([1-5])/i);
+  const pk = pkMatch ? parseInt(pkMatch[1]) : null;
+  const wp = wpMatch ? parseInt(wpMatch[1]) : null;
+  const tk = tkMatch ? parseInt(tkMatch[1]) : null;
+  const cu = cuMatch ? parseInt(cuMatch[1]) : null;
 
-  // Fallback: if no multiplier line, try to compute from the two scored elements
-  if (!grade) {
-    const tkMatch = response.match(/Text Knowledge:\s*([1-5])/i);
-    const cuMatch = response.match(/Content Understanding:\s*([1-5])/i);
+  // Extract adjustment from "Adjustment: +/-X.X" line
+  const adjMatch = response.match(/Adjustment:\s*([+-]?\s*[0-9]+\.?[0-9]*)/i);
+  let grade = adjMatch ? parseFloat(adjMatch[1].replace(/\s/g, '')) : null;
 
-    if (tkMatch && cuMatch) {
-      const avg = (parseInt(tkMatch[1]) + parseInt(cuMatch[1])) / 2;
-      grade = 1.00 + (avg - 3) * 0.05;
+  // Fallback: if no adjustment line, compute from the four scored elements
+  if (grade === null || isNaN(grade)) {
+    if (pk !== null && wp !== null && tk !== null && cu !== null) {
+      const avg = (pk + wp + tk + cu) / 4;
+      grade = (avg - 3) * 5;
     }
   }
 
-  // Default to 1.0 if parsing fails entirely
-  if (!grade || isNaN(grade)) {
-    grade = 1.0;
-    sheetLog("parseGradingResponse", "Could not parse grade, defaulting to 1.0", { response: response.substring(0, 500) });
+  // Default to 0 (no adjustment) if parsing fails entirely
+  if (grade === null || isNaN(grade)) {
+    grade = 0;
+    sheetLog("parseGradingResponse", "Could not parse adjustment, defaulting to 0", { response: response.substring(0, 500) });
   }
 
-  // Clamp to valid range [0.90, 1.05]
-  grade = Math.max(0.90, Math.min(1.05, grade));
+  // Clamp to valid range [-10, +5]
+  grade = Math.max(-10, Math.min(5, grade));
 
   // Check for integrity flags in the INTEGRITY FLAGS section
   const flagSection = response.match(/INTEGRITY FLAGS:\s*([\s\S]*?)$/i);
   const flagText = flagSection ? flagSection[1].trim() : "";
   const hasIntegrityFlags = flagText.length > 0 && !/^none\.?$/i.test(flagText);
 
-  // Check for Pass/Flag elements — a "Flag" on either element also triggers flagged
-  const pkFlag = /Paper Knowledge:\s*Flag/i.test(response);
-  const wpFlag = /Writing Process:\s*Flag/i.test(response);
-  const flagged = hasIntegrityFlags || pkFlag || wpFlag;
+  // Any score below 3 triggers a flag
+  const flagged = hasIntegrityFlags ||
+    (pk !== null && pk < 3) || (wp !== null && wp < 3) ||
+    (tk !== null && tk < 3) || (cu !== null && cu < 3);
 
   return {
-    grade: Math.round(grade * 100) / 100,  // Round to 2 decimal places
+    grade: Math.round(grade * 10) / 10,  // Round to 1 decimal place
     comments: response,
     flagged: flagged
   };
@@ -1851,7 +1859,7 @@ function formatDatabaseSheet(ss) {
     [COL.DEFENSE_STARTED]: 130,  // Date/time
     [COL.CALL_LENGTH]: 80,       // Duration in seconds
     [COL.TRANSCRIPT]: 150,       // Long text - keep narrow
-    [COL.AI_MULTIPLIER]: 80,     // Numeric grade
+    [COL.AI_ADJUSTMENT]: 80,     // Percentage point adjustment
     [COL.AI_COMMENT]: 150,       // Long text - keep narrow
     [COL.INSTRUCTOR_NOTES]: 120, // Notes
     [COL.FINAL_GRADE]: 80,       // Grade

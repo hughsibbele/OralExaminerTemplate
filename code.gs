@@ -2054,6 +2054,31 @@ function onOpen() {
 }
 
 /**
+ * Diagnostic: logs the full ElevenLabs conversation API response for a given conversation ID.
+ * Run from the script editor to inspect available fields.
+ * Change the conversationId below before running.
+ */
+function debugConversation() {
+  const conversationId = "conv_1501kjjzj1sefsqs420jwygff3rx";
+  const convData = getElevenLabsConversation(conversationId);
+
+  // Log top-level keys and their types/values (excluding transcript which is huge)
+  const summary = {};
+  for (const key of Object.keys(convData)) {
+    if (key === "transcript") {
+      summary[key] = `[Array of ${(convData[key] || []).length} entries]`;
+    } else if (typeof convData[key] === "object" && convData[key] !== null) {
+      summary[key] = convData[key];
+    } else {
+      summary[key] = convData[key];
+    }
+  }
+
+  sheetLog("debugConversation", "Full API response (top-level)", JSON.stringify(summary, null, 2));
+  console.log(JSON.stringify(summary, null, 2));
+}
+
+/**
  * Shows a summary of submission statuses
  */
 function showStatusCounts() {

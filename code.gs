@@ -1005,14 +1005,17 @@ function handleTranscriptWebhook(payload) {
       studentName: submission.studentName
     });
 
-    // Fetch call duration from ElevenLabs API
+    // Fetch call metadata from ElevenLabs API
     let callLength = null;
+    let defenseStartTime = null;
     if (conversationId) {
       try {
         const convData = getElevenLabsConversation(conversationId);
-        callLength = convData.call_duration_secs || null;
+        callLength = convData.metadata?.call_duration_secs || null;
+        const startUnix = convData.metadata?.start_time_unix_secs;
+        if (startUnix) defenseStartTime = new Date(startUnix * 1000);
       } catch (e) {
-        sheetLog("handleTranscriptWebhook", "Could not fetch call duration", {
+        sheetLog("handleTranscriptWebhook", "Could not fetch call metadata", {
           conversationId: conversationId,
           error: e.toString()
         });
@@ -1034,7 +1037,7 @@ function handleTranscriptWebhook(payload) {
 
     // Update the student record
     const updated = updateStudentStatus(sessionId, newStatus, {
-      defenseStarted: submission.status === STATUS.SUBMITTED ? new Date() : null,
+      defenseStarted: defenseStartTime,
       callLength: callLength,
       transcript: transcriptText,
       conversationId: conversationId
@@ -1161,7 +1164,7 @@ function getMostRecentPendingSubmission() {
 /**
  * Fetches conversation details from the ElevenLabs API
  * @param {string} conversationId - The 11Labs conversation_id
- * @returns {Object} The full conversation object (includes call_duration_secs, transcript, status, metadata)
+ * @returns {Object} The full conversation object (metadata.call_duration_secs, metadata.start_time_unix_secs, transcript, status)
  */
 function getElevenLabsConversation(conversationId) {
   const apiKey = getConfig("elevenlabs_api_key");
@@ -1527,8 +1530,10 @@ function recoverStuckDefenses() {
         continue;
       }
 
-      // Extract call duration and status info
-      const callLength = convData.call_duration_secs || null;
+      // Extract call metadata
+      const callLength = convData.metadata?.call_duration_secs || null;
+      const startUnix = convData.metadata?.start_time_unix_secs;
+      const defenseStartTime = startUnix ? new Date(startUnix * 1000) : null;
       const convStatus = convData.status || "unknown";
       const errorInfo = convData.metadata?.error || null;
 
@@ -1539,7 +1544,7 @@ function recoverStuckDefenses() {
 
       // Update the database
       const updated = updateStudentStatus(sub.sessionId, newStatus, {
-        defenseStarted: sub.status === STATUS.SUBMITTED ? new Date() : null,
+        defenseStarted: defenseStartTime,
         callLength: callLength,
         transcript: transcriptText,
         conversationId: conversationId
@@ -1673,8 +1678,10 @@ function fetchAndStoreTranscript(sessionId) {
       return { success: false, retryable: true, message: "Transcript is empty — may still be processing" };
     }
 
-    // Extract call duration
-    const callLength = convData.call_duration_secs || null;
+    // Extract call metadata
+    const callLength = convData.metadata?.call_duration_secs || null;
+    const startUnix = convData.metadata?.start_time_unix_secs;
+    const defenseStartTime = startUnix ? new Date(startUnix * 1000) : null;
 
     // Auto-exclude short calls
     const minCallLength = parseInt(getConfig("min_call_length")) || 60;
@@ -1691,7 +1698,7 @@ function fetchAndStoreTranscript(sessionId) {
 
     // Update the student record
     const updated = updateStudentStatus(sessionId, newStatus, {
-      defenseStarted: submission.status === STATUS.SUBMITTED ? new Date() : null,
+      defenseStarted: defenseStartTime,
       callLength: callLength,
       transcript: transcriptText,
       conversationId: conversationId
@@ -1779,13 +1786,15 @@ function autoRecoverTranscripts() {
 
         if (!transcriptText || transcriptText.trim().length === 0) continue;
 
-        const callLength = convData.call_duration_secs || null;
+        const callLength = convData.metadata?.call_duration_secs || null;
+        const startUnix = convData.metadata?.start_time_unix_secs;
+        const defenseStartTime = startUnix ? new Date(startUnix * 1000) : null;
         const minCallLength = parseInt(getConfig("min_call_length")) || 60;
         const isExcluded = callLength !== null && callLength < minCallLength;
         const newStatus = isExcluded ? STATUS.EXCLUDED : STATUS.DEFENSE_COMPLETE;
 
         const updated = updateStudentStatus(sub.sessionId, newStatus, {
-          defenseStarted: sub.status === STATUS.SUBMITTED ? new Date() : null,
+          defenseStarted: defenseStartTime,
           callLength: callLength,
           transcript: transcriptText,
           conversationId: conversationId
@@ -2051,31 +2060,6 @@ function onOpen() {
 
   // Auto-format the database sheet on open (pass active spreadsheet to avoid openById permission issue)
   formatDatabaseSheet(SpreadsheetApp.getActiveSpreadsheet());
-}
-
-/**
- * Diagnostic: logs the full ElevenLabs conversation API response for a given conversation ID.
- * Run from the script editor to inspect available fields.
- * Change the conversationId below before running.
- */
-function debugConversation() {
-  const conversationId = "conv_1501kjjzj1sefsqs420jwygff3rx";
-  const convData = getElevenLabsConversation(conversationId);
-
-  // Log top-level keys and their types/values (excluding transcript which is huge)
-  const summary = {};
-  for (const key of Object.keys(convData)) {
-    if (key === "transcript") {
-      summary[key] = `[Array of ${(convData[key] || []).length} entries]`;
-    } else if (typeof convData[key] === "object" && convData[key] !== null) {
-      summary[key] = convData[key];
-    } else {
-      summary[key] = convData[key];
-    }
-  }
-
-  sheetLog("debugConversation", "Full API response (top-level)", JSON.stringify(summary, null, 2));
-  console.log(JSON.stringify(summary, null, 2));
 }
 
 /**

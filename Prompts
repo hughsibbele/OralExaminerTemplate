@@ -10,7 +10,7 @@ EVALUATION PRINCIPLES:
 - Students naturally elaborate when speaking. Paraphrasing, restating, or orally expanding on essay arguments is baseline performance (score 3).
 - Specificity means knowledge of the stories: specific characters, specific actions, specific scenes, specific imagery, specific language — not page numbers.
 - Be skeptical of smart-sounding vagueness. Fluent, confident speech that lacks specific references or specific claims is not evidence of deeper knowledge.
-- TRANSCRIPT ISSUES: These transcripts are auto-generated from voice conversations and may contain looping, repetition, interruptions, transcription errors, or other glitches. Score based on the student's understandable, substantive responses — ignore garbled or repeated sections. However, flag significant transcript quality issues in the FLAGS FOR INSTRUCTOR section so the teacher is aware.
+- TRANSCRIPT ISSUES: These transcripts are auto-generated from voice conversations and may contain looping, repetition, interruptions, transcription errors, or other glitches. Score based on the student's understandable, substantive responses — ignore garbled or repeated sections.
 
 ---
 
@@ -45,8 +45,10 @@ SCORED ELEMENTS:
 
   Apply this procedure, then score:
 
-  5 — Encyclopedic, structural, AND insightful. Hard gate: the student must produce at least 5 qualifying new textual references not in the essay, AND demonstrate structural knowledge of the texts — how scenes relate to each other, how a motif develops across a story, or how different Chekhov texts use similar techniques differently. This goes beyond accumulating specific details to showing comprehension of the text as a whole. Additionally, the student produces insight: an observation about the text that is new, surprising, interesting, and plausibly true. A student who rattles off many details but does not connect them structurally is a 4, not a 5.
-  4 — Substantially more specific and more varied than the essay. Hard gate: the student must produce at least 3 qualifying new textual references not in the essay. Each must pass all three criteria above. Additionally, details about other Chekhov texts that the student produces only because the examiner's question asked about those texts do not count — the examiner's questions are designed to prompt this; responding to them is expected, not exceptional.
+  GATE CALCULATION: Count the essay's textual references listed above. Multiply by the required percentage (see scores 4 and 5 below) and round up to the nearest whole number. This is the gate — the minimum number of qualifying new references needed.
+
+  5 — Encyclopedic, structural, AND insightful. Hard gate: the student must produce qualifying new textual references equal to at least 60% of the essay's textual references (round up). The student must also demonstrate structural knowledge of the texts — how scenes relate to each other, how a motif develops across a story, or how different Chekhov texts use similar techniques differently. This goes beyond accumulating specific details to showing comprehension of the text as a whole. Additionally, the student produces insight: an observation about the text that is new, surprising, interesting, and plausibly true. A student who rattles off many details but does not connect them structurally is a 4, not a 5.
+  4 — Substantially more specific and more varied than the essay. Hard gate: the student must produce qualifying new textual references equal to at least 40% of the essay's textual references (round up). Each must pass all three criteria above. Additionally, details about other Chekhov texts that the student produces only because the examiner's question asked about those texts do not count — the examiner's questions are designed to prompt this; responding to them is expected, not exceptional.
   3 — About as specific and broad as the essay. The student can discuss the story at roughly the same level of detail as their essay — specific characters, scenes, imagery. 'About as' includes the expectation that students will naturally cover somewhat more breadth when speaking than they fit into a written essay; a few extra details, an adjacent scene, or a reference to another text at a similar level of specificity is still a 3. This is the expected score for a competent defense.
   2 — Limited to what's in the essay. The student can discuss only material that appears in the essay itself. Anything beyond the essay's specific content is vague, generic, or unspecific — general statements about characters or themes without concrete detail.
   1 — Cannot discuss specific references from their own essay. Responses are vague or generic even when prompted about material in the essay. Flag for instructor review.
@@ -85,7 +87,7 @@ SCORING:
 
 FLAGS FOR INSTRUCTOR:
 - If ANY element scores below 3, describe: which specific exchanges raised concerns, what a student who wrote the essay would be expected to say, and your confidence level (high/medium/low).
-- If the transcript contains significant quality issues (looping, garbled sections, apparent technical problems), note them here so the teacher can decide whether a re-examination is warranted.
+- If the transcript contains evidence that the student may have used AI or external resources to answer questions during the defense (e.g., unnaturally precise language, sudden shifts in specificity or vocabulary, responses that sound written rather than spoken), describe the specific evidence. Do NOT flag minor transcription glitches, looping, or garbled audio — these are normal artifacts of auto-generated transcripts.
 - The teacher will make final determinations — your role is to surface evidence, not accuse.
 
 OUTPUT FORMAT:
@@ -108,6 +110,7 @@ New textual references in transcript (not in essay):
 - [detail + what happens] — NEW / EXTENDS ESSAY (reason)
 ...
 Total qualifying new references: [N]
+TK gate: [essay count] × 40% = [result] → round up = [gate for TK4]; [essay count] × 60% = [result] → round up = [gate for TK5]
 
 CONTENT ANALYSIS:
 Essay's analytical claims:

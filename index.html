@@ -103,11 +103,6 @@
         padding: 32px 36px;
       }
 
-      /* Hide avatars until config loads the URL */
-      .bot-avatar:not([src]) {
-        visibility: hidden;
-      }
-
       /* Screen States */
       .screen {
         display: none;
@@ -136,6 +131,10 @@
           0 0 0 3px var(--burgundy),
           0 8px 32px rgba(114, 47, 55, 0.25);
         margin-bottom: 24px;
+      }
+
+      .bot-avatar:not([src]) {
+        visibility: hidden;
       }
 
       .welcome-title {
@@ -590,13 +589,14 @@
         <div id="screen-welcome" class="screen active">
           <div class="welcome-content">
             <img
-              alt="ExaminerBot"
+              alt="Examiner"
               class="avatar-large bot-avatar"
             >
-            <h2 class="welcome-title">Welcome to the Oral Defense Portal</h2>
+            <h2 class="welcome-title">Welcome</h2>
             <p class="welcome-intro">
-              Welcome to the Oral Defense Portal. I will be conducting your oral examination today.
-              Please enter and submit your essay to begin.
+              Welcome to the oral defense portal. You will submit your essay,
+              then have a voice conversation with the examiner to defend your work.
+              Please click below to begin.
             </p>
 
             <div class="ornamental-divider">
@@ -618,7 +618,7 @@
         <div id="screen-submit" class="screen">
           <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
             <img
-              alt="ExaminerBot"
+              alt="Examiner"
               class="bot-avatar"
               style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold);"
             >
@@ -674,7 +674,7 @@
             <div class="defense-frame">
               <div class="agent-avatar-wrapper">
                 <img
-                  alt="ExaminerBot"
+                  alt="Examiner"
                   class="agent-avatar bot-avatar"
                   id="agentAvatar"
                 >
@@ -757,7 +757,7 @@
               </div>
 
               <p style="font-style: italic; color: var(--burgundy);">
-                "Thank you for your time and thoughtful responses."
+                Thank you for your time and thoughtful responses.
               </p>
 
               <div class="info-box">
@@ -781,8 +781,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@elevenlabs/client@0.15.0/dist/lib.umd.js"></script>
 
     <script>
-      // UPDATE THIS: Replace DEPLOYMENT_ID with your Apps Script deployment URL (see README Step 4)
-      const APPS_SCRIPT_URL = "https://script.google.com/macros/s/DEPLOYMENT_ID/exec";
+      // Apps Script deployed web-app URL (replace DEPLOYMENT_ID after deploying)
+      const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxeVVbPoPuGkXmKRs_mrrb5_hKn0snOBO3ARN1YCxZSfk8v69PsZHVemyk6_ZUguOswyA/exec";
 
       /**
        * Calls the Apps Script backend via fetch (replaces google.script.run).

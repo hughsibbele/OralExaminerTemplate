@@ -1110,11 +1110,6 @@ function formatCallLength(secs) {
   return `${mins}m ${remainSecs}s`;
 }
 
-/**
- * Formats a transcript array into readable text
- * @param {Array} transcriptArray - Array of {role, message} objects
- * @returns {string} Formatted transcript text
- */
 function formatTranscript(transcriptArray) {
   if (!Array.isArray(transcriptArray)) {
     return String(transcriptArray);

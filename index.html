@@ -103,6 +103,11 @@
         padding: 32px 36px;
       }
 
+      /* Hide avatars until config loads the URL */
+      .bot-avatar:not([src]) {
+        visibility: hidden;
+      }
+
       /* Screen States */
       .screen {
         display: none;
@@ -576,8 +581,8 @@
 
     <div class="container">
       <div class="header">
-        <h1>Chekhov Defense Portal</h1>
-        <p>Oral Examination of Literary Works</p>
+        <h1>Oral Defense Portal</h1>
+        <p></p>
       </div>
 
       <div class="content">
@@ -585,15 +590,13 @@
         <div id="screen-welcome" class="screen active">
           <div class="welcome-content">
             <img
-              src="https://lh3.googleusercontent.com/d/15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
-              alt="ChekhovBot"
+              alt="ExaminerBot"
               class="avatar-large bot-avatar"
             >
-            <h2 class="welcome-title">Welcome, Dear Scholar</h2>
+            <h2 class="welcome-title">Welcome to the Oral Defense Portal</h2>
             <p class="welcome-intro">
-              I am ChekhovBot, humble servant to the literary arts and guardian of scholarly discourse.
-              I have been entrusted with the solemn duty of conducting your oral defense.
-              Please, enter and present your work.
+              Welcome to the Oral Defense Portal. I will be conducting your oral examination today.
+              Please enter and submit your essay to begin.
             </p>
 
             <div class="ornamental-divider">
@@ -615,8 +618,7 @@
         <div id="screen-submit" class="screen">
           <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
             <img
-              src="https://lh3.googleusercontent.com/d/15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
-              alt="ChekhovBot"
+              alt="ExaminerBot"
               class="bot-avatar"
               style="width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--gold);"
             >
@@ -672,8 +674,7 @@
             <div class="defense-frame">
               <div class="agent-avatar-wrapper">
                 <img
-                  src="https://lh3.googleusercontent.com/d/15AUwvvO1w29vg__uZLp5Q-lkqcm7jn6w"
-                  alt="ChekhovBot"
+                  alt="ExaminerBot"
                   class="agent-avatar bot-avatar"
                   id="agentAvatar"
                 >
@@ -681,7 +682,7 @@
 
               <div class="defense-header">
                 <h2 id="defenseTitle">Begin Your Defense</h2>
-                <p id="defenseSubtitle">Click the button below to start speaking with ChekhovBot</p>
+                <p id="defenseSubtitle">Click the button below to start speaking with the examiner</p>
               </div>
 
               <div id="callTimer" class="call-timer" style="display: none;">
@@ -727,7 +728,7 @@
                   <div id="defenseActionSpinner" class="spinner" style="display: none;"></div>
                 </button>
                 <p id="defenseActionHint" style="font-size: 0.8rem; color: var(--brown); margin-top: 8px;">
-                  Click to start speaking with ChekhovBot
+                  Click to start speaking with the examiner
                 </p>
               </div>
             </div>
@@ -756,10 +757,8 @@
               </div>
 
               <p style="font-style: italic; color: var(--burgundy);">
-                "Thank you for your time and thoughtful responses.
-                May your scholarly endeavors continue to flourish."
+                "Thank you for your time and thoughtful responses."
               </p>
-              <p style="font-size: 0.9rem;">— ChekhovBot</p>
 
               <div class="info-box">
                 <p>Your instructor will review your essay and defense transcript.
@@ -782,8 +781,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@elevenlabs/client@0.15.0/dist/lib.umd.js"></script>
 
     <script>
-      // Apps Script deployed web-app URL (replace DEPLOYMENT_ID after deploying)
-      const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxeVVbPoPuGkXmKRs_mrrb5_hKn0snOBO3ARN1YCxZSfk8v69PsZHVemyk6_ZUguOswyA/exec";
+      // UPDATE THIS: Replace DEPLOYMENT_ID with your Apps Script deployment URL (see README Step 4)
+      const APPS_SCRIPT_URL = "https://script.google.com/macros/s/DEPLOYMENT_ID/exec";
 
       /**
        * Calls the Apps Script backend via fetch (replaces google.script.run).
@@ -812,8 +811,8 @@
       let CONFIG = {
         agentId: "",
         maxChars: 15000,
-        appTitle: "Chekhov Defense Portal",
-        appSubtitle: "Oral Examination of Literary Works"
+        appTitle: "Oral Defense Portal",
+        appSubtitle: ""
       };
 
       // State
@@ -963,7 +962,7 @@
             btn.classList.add('btn-success');
             text.textContent = 'Begin Defense';
             icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />';
-            hint.textContent = 'Click to start speaking with ChekhovBot';
+            hint.textContent = 'Click to start speaking with the examiner';
             break;
           case 'connecting':
             btn.classList.add('btn-success');
@@ -1189,7 +1188,7 @@
 
         // Reset defense screen state
         document.getElementById('defenseTitle').textContent = 'Begin Your Defense';
-        document.getElementById('defenseSubtitle').textContent = 'Click the button below to start speaking with ChekhovBot';
+        document.getElementById('defenseSubtitle').textContent = 'Click the button below to start speaking with the examiner';
         document.getElementById('callTimer').style.display = 'none';
         document.getElementById('preCallChecklist').style.display = '';
         setButtonState('ready');

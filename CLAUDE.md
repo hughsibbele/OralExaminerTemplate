@@ -13,7 +13,7 @@ An oral defense examination system for student essays, built as a Google Apps Sc
 ## Files
 
 - `code.gs` — All backend logic: web endpoints (`doGet`/`doPost` with `?action=` routing), API handlers for frontend (`getConfig`, `submitEssay`, `fetchTranscript`), ElevenLabs webhook receiver (optional backup), submission processing, question selection, prompt building, Gemini grading, setup wizard
-- `index.html` — Single-page frontend with 5 screens (welcome → submit → ready → defense → complete). Hosted on GitHub Pages. Inline CSS and JS. Calls Apps Script backend via `fetch()` using `callBackend()` helper
+- `index.html` — Single-page frontend with 4 screens (welcome → submit → defense → complete). Hosted on GitHub Pages. Inline CSS and JS. Calls Apps Script backend via `fetch()` using `callBackend()` helper
 - `appsscript.json` — Apps Script manifest (V8 runtime, Sheets + external request scopes)
 - `Prompts` — Local reference file (tab-separated: prompt_name → prompt_text). Canonical copy lives in the Google Sheet "Prompts" tab; this file is the local mirror
 
@@ -40,7 +40,7 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 - All backend functions are global (Apps Script requirement) — no module system
 - Frontend is hosted on **GitHub Pages** (top-level page, not in Apps Script iframe) to enable microphone access for the ElevenLabs voice widget
 - Frontend calls the Apps Script backend via `fetch()` using `callBackend(action, data)`. POST requests use `Content-Type: text/plain` to avoid CORS preflight (Apps Script doesn't handle OPTIONS). The `APPS_SCRIPT_URL` constant in `index.html` must contain the deployed Apps Script `/exec` URL
-- The 11Labs widget is loaded from `unpkg.com/@elevenlabs/convai-widget-embed@beta`
+- The ElevenLabs SDK is loaded from `cdn.jsdelivr.net/npm/@elevenlabs/client@0.15.0` with `livekit-client@2.11.4`
 - **Spreadsheet ID**: `getSpreadsheetId()` reads from Script Properties (set by Setup Wizard). NOT a hardcoded const — this allows each teacher's copy to auto-configure
 - **Setup Wizard**: `showSetupWizard()` → HTML dialog → `runSetupWizard(config)` stores keys in PropertiesService, auto-captures spreadsheet ID, installs time-driven trigger
 - **`isSetupComplete()`**: Checks that `spreadsheet_id`, `elevenlabs_agent_id`, `elevenlabs_api_key`, and `gemini_api_key` are all set in Script Properties
@@ -53,9 +53,9 @@ Key config values: `elevenlabs_agent_id`, `elevenlabs_api_key`, `gemini_api_key`
 ## Grading System
 
 - **Rubric**: 4 elements — Paper Knowledge (1-3) and Writing Process (1-3) are capped at 3; Text Knowledge (1-5) and Content Understanding (1-5) can go higher. 3 = meets expectations
-- **Multiplier formula**: `1.00 + (average - 3) × 0.05`, clamped to [0.90, 1.05], rounded to 2 decimal places
-- **Integrity flags**: Any element scoring 1 or average ≤ 1.5 triggers a flag. Comments are prefixed with "⚠ INTEGRITY FLAG ⚠"
-- **Parser** (`parseGradingResponse`): extracts `Multiplier: X.XX` line from Gemini's structured output; falls back to computing from individual scores if that line is missing
+- **Adjustment formula**: `(average - 3) × 5`, clamped to [-10, +5], rounded to 1 decimal place
+- **Flags for instructor**: Any element scoring below 3, or flag text in the FLAGS FOR INSTRUCTOR section, triggers a flag. Comments are prefixed with "⚠ FLAG FOR INSTRUCTOR ⚠"
+- **Parser** (`parseGradingResponse`): extracts `Adjustment: +/-X.X` line from Gemini's structured output; falls back to computing from individual scores if that line is missing
 - Prompts: `grading_system_prompt` (role/persona) and `grading_rubric` (rubric + scoring formula + output format)
 
 ## Style Conventions

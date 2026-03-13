@@ -1,6 +1,6 @@
 # Oral Examiner 4.0
 
-**A voice-based oral defense system for student essays.** Students submit an essay, have a live voice conversation with an AI examiner, and receive a grade multiplier based on how well they defended their work.
+**A voice-based oral defense system for student essays.** Students submit an essay, have a live voice conversation with an AI examiner, and receive a grade adjustment based on how well they defended their work.
 
 Built on Google Sheets + Google Apps Script. The student-facing frontend is hosted on **GitHub Pages** (not served from Apps Script) to enable reliable microphone access for the voice examiner. Free to run (you provide your own API keys).
 
@@ -137,8 +137,8 @@ Non-secret settings you can tweak:
 
 1. Open your spreadsheet
 2. Click **Oral Defense > Grade All Pending**
-3. Gemini reads each essay + transcript and produces a multiplier (0.90 to 1.05) and detailed comments
-4. Review the grades in the **Database** tab — the AI Multiplier and AI Comment columns are filled in
+3. Gemini reads each essay + transcript and produces a grade adjustment (percentage points) and detailed comments
+4. Review the grades in the **Database** tab — the AI Adjustment and AI Comment columns are filled in
 5. Add your own notes in the Instructor Notes column if needed
 
 ---
